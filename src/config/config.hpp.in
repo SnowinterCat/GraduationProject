@@ -1,0 +1,24 @@
+#pragma once
+#include <gp/__config/os.hpp>
+#include <gp/__config/compiler.hpp>
+#include <gp/__config/platform.hpp>
+
+#define GP_VERSION                                                                                \
+    ((((uint32_t)(GP_VERSION_BUILD)) << 29U) | (((uint32_t)(GP_VERSION_MAJOR)) << 22U) |          \
+     (((uint32_t)(GP_VERSION_MINOR)) << 12U) | ((uint32_t)(GP_VERSION_ALTER)))
+#define GP_VERSION_STR "${VERSION}.${VERSION_BUILD}"
+#define GP_VERSION_MAJOR ${VERSION_MAJOR}
+#define GP_VERSION_MINOR ${VERSION_MINOR}
+#define GP_VERSION_ALTER ${VERSION_ALTER}
+#define GP_VERSION_BUILD ${VERSION_BUILD}
+#define GP_PLAT "${PLAT}"
+#define GP_ARCH "${ARCH}"
+${define GP_SHARED_BUILD}
+#define GP_MODE "${MODE}"
+#define GP_DEBUG ${DEBUG}
+#define GP_OS "${OS}"
+
+#define GP_BEGIN                                                                                  \
+    namespace gp                                                                                  \
+    {
+#define GP_END }
