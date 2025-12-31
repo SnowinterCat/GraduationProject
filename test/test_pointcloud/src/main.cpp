@@ -26,17 +26,26 @@ int main(int argc, const char *const *argvloc)
     if (!loader.LoadASCIIFromFile(&model, &errc, &warnc,
                                   (workDir / "data" / "stanford-bunny.gltf").string())) {
         if (!errc.empty()) {
-            SPDLOG_ERROR("Load Error, error info: {}", errc);
+            SPDLOG_ERROR("Load gltf model Error, error info: {}", errc);
         }
         if (!warnc.empty()) {
-            SPDLOG_WARN("Load Error, warn info: {}", warnc);
+            SPDLOG_WARN("Load gltf model Error, warn info: {}", warnc);
         }
-        return 0;
+        return -1;
     }
 
-    SPDLOG_INFO("scene count: {}", model.meshes.size());
-    for (std::size_t i = 0; i < model.meshes.size(); ++i) {
-        auto &mesh = model.meshes.at(i);
+    for (auto &mesh : model.meshes) {
+        for (auto &primitive : mesh.primitives) {
+            primitive.mode    = TINYGLTF_MODE_POINTS;
+            primitive.indices = -1;
+        }
+    }
+
+    if (!loader.WriteGltfSceneToFile(&model,
+                                     (workDir / "data" / "stanford-bunny-pointcloud.gltf").string(),
+                                     true, true, true, true)) {
+        SPDLOG_WARN("Write gltf model Error");
+        return -2;
     }
     return 0;
 }
