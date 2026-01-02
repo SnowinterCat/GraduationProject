@@ -19,7 +19,7 @@ concept CalculateDistance = requires(U vala, U valb) {
 };
 
 template <typename T, ArithmeticTuple PointType>
-    requires CalculateDistance<T, PointType>
+    requires CalculateDistance<T, PointType> && std::is_convertible_v<T, PointType>
 class KDTree {
 public:
 private:
@@ -27,6 +27,7 @@ private:
 
 struct Point3D {
     using PointType = std::tuple<int, int, int>;
+    operator PointType() { return std::tuple(_a, _b, _c); }
 
     static int distance(PointType, PointType);
 
