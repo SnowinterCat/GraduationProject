@@ -38,5 +38,10 @@ int main()
 {
     KDTree<Point3D, std::tuple<int, int, int>> a;
     std::println("{}", IsArithmeticTuple<std::tuple<std::string>>);
+
+    using A1 = std::tuple<int &, int>;
+    using A2 = std::tuple<int, int>;
+    std::println("A1->A2: {}, A2->A1: {}", std::is_convertible_v<A1, A2>,
+                 std::is_convertible_v<A2, A1>);
     return 0;
 }
