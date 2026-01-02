@@ -22,6 +22,9 @@ template <typename T, ArithmeticTuple PointType>
     requires CalculateDistance<T, PointType> && std::is_convertible_v<T, PointType>
 class KDTree {
 public:
+    static constexpr auto Dimension = std::tuple_size_v<PointType>;
+    using DistanceType = std::invoke_result_t<decltype(T::distance), PointType, PointType>;
+
 private:
 };
 
@@ -38,8 +41,7 @@ private:
 int main()
 {
     KDTree<Point3D, std::tuple<int, int, int>> a;
-    std::println("{}", IsArithmeticTuple<std::tuple<std::string>>);
-
+    std::println("{}", a.Dimension);
     using A1 = std::tuple<int &, int>;
     using A2 = std::tuple<int, int>;
     std::println("A1->A2: {}, A2->A1: {}", std::is_convertible_v<A1, A2>,
