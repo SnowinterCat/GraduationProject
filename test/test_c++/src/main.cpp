@@ -130,12 +130,12 @@ template <KDTreeNodeAble T>
 void KDTree<T>::setElement(std::span<T> arr)
 {
     _pointNodes.resize(arr.size());
-    for (IndexType i = 0; i < arr.size(); ++i) {
+    for (IndexType i = 0; i < IndexType(arr.size()); ++i) {
         _pointNodes[i] = {arr[i], i};
     }
 
     _treeNodes.resize(arr.size());
-    for (IndexType i = 0; i < arr.size(); ++i) {
+    for (IndexType i = 0; i < IndexType(arr.size()); ++i) {
         _treeNodes[i] = {-1, -1, -1};
     }
 }
