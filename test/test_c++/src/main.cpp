@@ -199,7 +199,7 @@ auto KDTree<T>::_buildTree(IndexType left, IndexType right, IndexType dim) -> In
     if (mid + 1 < right) {
         _treeNodes[mid].rson = _buildTree(mid + 1, right, (dim + 1) % Dimension);
     }
-    return Update(mid);
+    return _update(mid);
 }
 
 template <KDTreeNodeAble T>
@@ -278,11 +278,77 @@ auto KDTree<T>::findKthFarthest(const T &ta, int kth) -> IndexType
 template <KDTreeNodeAble T>
 void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disInf)
 {
-    ;
+    if (now < 0) {
+        return;
+    }
+    DistanceType nowDis = T::distance(ta, _pointNodes[now].point);
+    if (nowDis < _qMax.top().distance) {
+        _qMax.pop();
+        _qMax.push({nowDis, _pointNodes[now].index});
+    }
+    IndexType    lson = _treeNodes[now].lson;
+    IndexType    rson = _treeNodes[now].rson;
+    DistanceType lDis = disInf;
+    DistanceType rDis = disInf;
+    // if (lson != -1) {
+    //     lDis = MinDis(ta, lson);
+    // }
+    // if (rson != -1) {
+    //     rDis = MinDis(ta, rson);
+    // }
+    if (lDis < rDis) {
+        if (lDis <= _qMax.top().distance) {
+            _findNearest(ta, lson, disInf);
+        }
+        if (rDis <= _qMax.top().distance) {
+            _findNearest(ta, rson, disInf);
+        }
+    }
+    else {
+        if (rDis <= _qMax.top().distance) {
+            _findNearest(ta, rson, disInf);
+        }
+        if (lDis <= _qMax.top().distance) {
+            _findNearest(ta, lson, disInf);
+        }
+    }
 }
 
 template <KDTreeNodeAble T>
 void KDTree<T>::_findFarthest(const T &ta, IndexType now)
 {
-    ;
+    if (now < 0) {
+        return;
+    }
+    DistanceType nowDis = T::distance(ta, _pointNodes[now].point);
+    if (nowDis > _qMin.top().distance) {
+        _qMin.pop();
+        _qMin.push({nowDis, _pointNodes[now].index});
+    }
+    IndexType    lson = _treeNodes[now].lson;
+    IndexType    rson = _treeNodes[now].rson;
+    DistanceType lDis = 0;
+    DistanceType rDis = 0;
+    // if (lson != -1) {
+    //     lDis = MaxDis(ta, lson);
+    // }
+    // if (rson != -1) {
+    //     rDis = MaxDis(ta, rson);
+    // }
+    if (lDis > rDis) {
+        if (lDis >= _qMin.top().distance) {
+            _findFarthest(ta, lson);
+        }
+        if (rDis >= _qMin.top().distance) {
+            _findFarthest(ta, rson);
+        }
+    }
+    else {
+        if (rDis >= _qMin.top().distance) {
+            _findFarthest(ta, rson);
+        }
+        if (lDis >= _qMin.top().distance) {
+            _findFarthest(ta, lson);
+        }
+    }
 }
