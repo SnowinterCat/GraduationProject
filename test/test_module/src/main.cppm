@@ -1,4 +1,4 @@
-#include <print>
+import std;
 
 auto main() -> int
 {
