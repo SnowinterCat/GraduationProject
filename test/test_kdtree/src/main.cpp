@@ -71,16 +71,16 @@ public:
 public:
     void setElement(std::span<T> arr);
     void buildTree();
-    auto findNearest(const T &ta, DistanceType disInf = DistanceMax) -> IndexType;
-    auto findFarthest(const T &ta) -> IndexType;
-    auto findKthNearest(const T &ta, int kth, DistanceType disInf = DistanceMax) -> IndexType;
-    auto findKthFarthest(const T &ta, int kth) -> IndexType;
+    auto findNearest(const T &ta, DistanceType disMax = DistanceMax) -> IndexType;
+    auto findFarthest(const T &ta, DistanceType disMin = DistanceMin) -> IndexType;
+    auto findKthNearest(const T &ta, int kth, DistanceType disMax = DistanceMax) -> IndexType;
+    auto findKthFarthest(const T &ta, int kth, DistanceType disMin = DistanceMin) -> IndexType;
 
 private:
     auto _buildTree(IndexType left, IndexType right, IndexType dim) -> IndexType;
     auto _update(IndexType now) -> IndexType;
-    void _findNearest(const T &ta, IndexType now, DistanceType disInf);
-    void _findFarthest(const T &ta, IndexType now);
+    void _findNearest(const T &ta, IndexType now, DistanceType disMax);
+    void _findFarthest(const T &ta, IndexType now, DistanceType disMin);
     auto _minDis(const T &ta, IndexType now) -> DistanceType;
     auto _maxDis(const T &ta, IndexType now) -> DistanceType;
 
@@ -165,32 +165,32 @@ void KDTree<T>::buildTree()
 }
 
 template <KDTreeNodeAble T>
-auto KDTree<T>::findNearest(const T &ta, DistanceType disInf) -> IndexType
+auto KDTree<T>::findNearest(const T &ta, DistanceType disMax) -> IndexType
 {
-    return findKthNearest(ta, 1, disInf);
+    return findKthNearest(ta, 1, disMax);
 }
 
 template <KDTreeNodeAble T>
-auto KDTree<T>::findFarthest(const T &ta) -> IndexType
+auto KDTree<T>::findFarthest(const T &ta, DistanceType disMin) -> IndexType
 {
-    return findKthFarthest(ta, 1);
+    return findKthFarthest(ta, 1, disMin);
 }
 
 template <KDTreeNodeAble T>
-auto KDTree<T>::findKthNearest(const T &ta, int kth, DistanceType disInf) -> IndexType
+auto KDTree<T>::findKthNearest(const T &ta, int kth, DistanceType disMax) -> IndexType
 {
     while (!_qMax.empty()) {
         _qMax.pop();
     }
     while ((kth--) != 0) {
-        _qMax.push({disInf, static_cast<IndexType>(-1)});
+        _qMax.push({disMax, static_cast<IndexType>(-1)});
     }
-    _findNearest(ta, _root, disInf);
+    _findNearest(ta, _root, disMax);
     return _qMax.top().index;
 }
 
 template <KDTreeNodeAble T>
-auto KDTree<T>::findKthFarthest(const T &ta, int kth) -> IndexType
+auto KDTree<T>::findKthFarthest(const T &ta, int kth, DistanceType disMin) -> IndexType
 {
     while (!_qMin.empty()) {
         _qMin.pop();
@@ -198,7 +198,7 @@ auto KDTree<T>::findKthFarthest(const T &ta, int kth) -> IndexType
     while ((kth--) != 0) {
         _qMin.push({DistanceMin, static_cast<IndexType>(-1)});
     }
-    _findFarthest(ta, _root);
+    _findFarthest(ta, _root, disMin);
     return _qMin.top().index;
 }
 
@@ -264,7 +264,7 @@ auto KDTree<T>::_update(IndexType now) -> IndexType
 }
 
 template <KDTreeNodeAble T>
-void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disInf)
+void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disMax)
 {
     if (now < 0) {
         return;
@@ -276,8 +276,8 @@ void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disInf)
     }
     IndexType    lson = _treeNodes[now].lson;
     IndexType    rson = _treeNodes[now].rson;
-    DistanceType lDis = disInf;
-    DistanceType rDis = disInf;
+    DistanceType lDis = disMax;
+    DistanceType rDis = disMax;
     if (lson != -1) {
         lDis = _minDis(ta, lson);
     }
@@ -286,24 +286,24 @@ void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disInf)
     }
     if (lDis < rDis) {
         if (lDis <= _qMax.top().distance) {
-            _findNearest(ta, lson, disInf);
+            _findNearest(ta, lson, disMax);
         }
         if (rDis <= _qMax.top().distance) {
-            _findNearest(ta, rson, disInf);
+            _findNearest(ta, rson, disMax);
         }
     }
     else {
         if (rDis <= _qMax.top().distance) {
-            _findNearest(ta, rson, disInf);
+            _findNearest(ta, rson, disMax);
         }
         if (lDis <= _qMax.top().distance) {
-            _findNearest(ta, lson, disInf);
+            _findNearest(ta, lson, disMax);
         }
     }
 }
 
 template <KDTreeNodeAble T>
-void KDTree<T>::_findFarthest(const T &ta, IndexType now)
+void KDTree<T>::_findFarthest(const T &ta, IndexType now, DistanceType disMin)
 {
     if (now < 0) {
         return;
@@ -315,8 +315,8 @@ void KDTree<T>::_findFarthest(const T &ta, IndexType now)
     }
     IndexType    lson = _treeNodes[now].lson;
     IndexType    rson = _treeNodes[now].rson;
-    DistanceType lDis = 0;
-    DistanceType rDis = 0;
+    DistanceType lDis = disMin;
+    DistanceType rDis = disMin;
     if (lson != -1) {
         lDis = _maxDis(ta, lson);
     }
@@ -325,18 +325,18 @@ void KDTree<T>::_findFarthest(const T &ta, IndexType now)
     }
     if (lDis > rDis) {
         if (lDis >= _qMin.top().distance) {
-            _findFarthest(ta, lson);
+            _findFarthest(ta, lson, disMin);
         }
         if (rDis >= _qMin.top().distance) {
-            _findFarthest(ta, rson);
+            _findFarthest(ta, rson, disMin);
         }
     }
     else {
         if (rDis >= _qMin.top().distance) {
-            _findFarthest(ta, rson);
+            _findFarthest(ta, rson, disMin);
         }
         if (lDis >= _qMin.top().distance) {
-            _findFarthest(ta, lson);
+            _findFarthest(ta, lson, disMin);
         }
     }
 }
