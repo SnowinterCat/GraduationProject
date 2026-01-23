@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <limits>
 #include <vector>
+#include <array>
 #include <queue>
 #include <span>
 #include <print>
