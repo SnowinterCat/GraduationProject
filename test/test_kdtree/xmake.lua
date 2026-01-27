@@ -2,7 +2,7 @@ target("test_kdtree")
     set_kind("binary")
     set_targetdir("$(testdir)")
 
-    add_deps("config", "stl")
+    add_deps("config", "stl", "algorithm")
     add_packages("spdlog")
 
     -- add_includedirs("include", {public = true})
