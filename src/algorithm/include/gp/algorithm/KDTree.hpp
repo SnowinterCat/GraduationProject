@@ -1,4 +1,6 @@
+#pragma once
 #include <gp/config.hpp>
+#include <gp/__algorithm/__config.hpp>
 // Standard Library
 #include <type_traits>
 #include <concepts>
@@ -8,10 +10,12 @@
 #include <array>
 #include <queue>
 #include <span>
-#include <print>
 // System Library
 // Third-Party Library
 // Local Library
+
+GP_BEGIN
+GP_ALGORITHM_BEGIN
 
 using IndexType     = int32_t;
 using DimensionType = int32_t;
@@ -98,48 +102,6 @@ private:
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<>> _qMin;
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::less<>>    _qMax;
 };
-
-struct Point3D {
-    static constexpr DimensionType Dimension = 3;
-
-    using DistanceType = float;
-    using PointType    = std::array<DistanceType, Dimension>;
-
-    operator PointType() const
-    {
-        PointType temp = {
-            static_cast<float>(a[0]),
-            static_cast<float>(a[1]),
-            static_cast<float>(a[2]),
-        };
-        return temp;
-    }
-
-    static DistanceType distance(PointType pa, PointType pb)
-    {
-        const PointType temp = {pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]};
-        return (temp[0] * temp[0]) + (temp[1] * temp[1]) + (temp[2] * temp[2]);
-    }
-
-    int a[3];
-};
-
-int main()
-{
-    KDTree<Point3D> aa;
-
-    std::vector<Point3D> points = {
-        {1, 1, 1},
-        {2, 2, 2}
-    };
-    aa.setElement(points);
-    aa.buildTree();
-    std::println("Nearest Point's index: {}", aa.findKthNearest({1, 2, 1}, 1));
-    std::println("Farthest Point's index: {}", aa.findKthFarthest({1, 2, 1}, 1));
-
-    std::println("3th Nearest Point's index: {}", aa.findKthNearest({1, 2, 1}, 3));
-    return 0;
-}
 
 // public
 
@@ -377,3 +339,6 @@ auto KDTree<T>::_maxDis(const T &ta, IndexType now) -> DistanceType
     }
     return T::distance(temp, PointType{});
 }
+
+GP_ALGORITHM_END
+GP_END
