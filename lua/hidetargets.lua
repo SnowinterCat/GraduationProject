@@ -42,7 +42,7 @@ target("export")
             print(pkg_name, "(lib count: " .. tostring(#files) .. ")", files)
             for _, file in ipairs(files) do
                 local targetpath = path.join(path.translate(target:targetdir()), path.filename(file))
-                if os.isfile(targetpath) and hash.md5(file) ~= hash.md5(targetpath) then
+                if os.isfile(targetpath) and hash.sha256(file) ~= hash.sha256(targetpath) then
                     os.tryrm(targetpath)
                     os.cp(file, target:targetdir() .. "/", {symlink = true})
                 elseif not os.isfile(targetpath) then
