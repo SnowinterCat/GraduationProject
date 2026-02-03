@@ -27,7 +27,6 @@ option("3rd_kind",     {showmenu = true, default = get_config("kind"), values = 
 option("3rd_mode",     {showmenu = true, default = "release", values = {"release", "debug"}})
 option("outputdir",    {showmenu = true, default = path.join(os.projectdir(), "bin"), type = "string"})
 option("buildversion", {showmenu = true, default = 0, type = "number"})
-option("replace",      {showmenu = true, default = false, type = "boolean"}) -- export 三方库时是否强制替换
 
 includes("lua/check")
 check_macros("has_std_out_ptr",         "__cpp_lib_out_ptr",            {languages = stdcxx(), includes = "version"})
