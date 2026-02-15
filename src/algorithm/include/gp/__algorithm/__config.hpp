@@ -19,7 +19,7 @@
     #endif
 #endif
 
-#define GP_ALGORITHM_BEGIN                                                                               \
+#define GP_ALGORITHM_BEGIN                                                                         \
     namespace alg                                                                                  \
     {
 #define GP_ALGORITHM_END }

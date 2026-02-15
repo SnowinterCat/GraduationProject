@@ -1,5 +1,4 @@
 #pragma once
-#include <gp/config.hpp>
 #include <gp/__algorithm/__config.hpp>
 // Standard Library
 #include <type_traits>
@@ -83,7 +82,7 @@ public:
     auto findKthNearest(const T &ta, int kth, DistanceType disMax = DistanceMax) -> IndexType;
     auto findKthFarthest(const T &ta, int kth, DistanceType disMin = DistanceMin) -> IndexType;
 
-private:
+protected:
     auto _buildTree(IndexType left, IndexType right, IndexType dim) -> IndexType;
     auto _update(IndexType now) -> IndexType;
     void _findNearest(const T &ta, IndexType now, DistanceType disMax);
@@ -91,7 +90,7 @@ private:
     auto _minDis(const T &ta, IndexType now) -> DistanceType;
     auto _maxDis(const T &ta, IndexType now) -> DistanceType;
 
-private:
+protected:
     IndexType              _root;
     std::vector<PointNode> _pointNodes;
     std::vector<TreeNode>  _treeNodes;
@@ -167,7 +166,7 @@ auto KDTree<T>::findKthFarthest(const T &ta, int kth, DistanceType disMin) -> In
     return _qMin.top().index;
 }
 
-// private
+// protected
 
 template <KDTreeNodeAble T>
 auto KDTree<T>::_buildTree(IndexType left, IndexType right, IndexType dim) -> IndexType
