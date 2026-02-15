@@ -1,8 +1,8 @@
-target("test_directedgraph")
+target("test_coroutine")
     set_kind("binary")
     set_targetdir("$(testdir)")
 
-    add_deps("config", "stl", "algorithm")
+    add_deps("config", "stl", "coroutine")
     add_packages("spdlog")
 
     -- add_includedirs("include", {public = true})
