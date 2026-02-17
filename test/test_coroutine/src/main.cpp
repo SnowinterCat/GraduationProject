@@ -6,15 +6,22 @@
 // Local Library
 #include <gp/coroutine.hpp>
 
-gp::coro::LocalTask<int> coro1()
+gp::coro::LocalTaskHandle<int> coro1()
 {
-    std::println("hello world");
-    co_return;
+    std::println("hello world1");
+    co_await std::suspend_always();
+    std::println("hello world2");
+    co_return 1;
 }
 
 int main()
 {
-    auto handle = coro1();
-    // handle._handle.resume();
+    auto handle  = coro1();
+    auto handle1 = handle;
+    std::println("value: {}", handle.promise().value());
+    handle.resume();
+    std::println("value: {}", handle.promise().value());
+    handle1.resume();
+    std::println("value: {}", handle1.promise().value());
     return 0;
 }
