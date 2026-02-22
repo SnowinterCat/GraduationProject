@@ -7,7 +7,7 @@
 #if defined(__cpp_lib_expected)
     #include <expected>
 #else
-    #include <tl/expected.hpp>
+    #include <zeus/expected.hpp>
 #endif
 
 GP_BEGIN
@@ -18,7 +18,7 @@ namespace expected
 #if defined(__cpp_lib_expected)
     using namespace ::std;
 #else
-    using namespace ::tl;
+    using namespace ::zeus;
 #endif
 } // namespace expected
 

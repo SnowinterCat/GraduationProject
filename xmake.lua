@@ -45,7 +45,7 @@ add_repositories("myrepo 3rd", {rootdir = os.scriptdir()})
 -- if not is_plat("android") then add_requires("vulkansdk") end
 -- header-only libraries
 if not has_config("has_std_out_ptr") then add_requires("out_ptr") end
-if not has_config("has_std_expected") then add_requires("tl_expected") end
+if not has_config("has_std_expected") then add_requires("zeus_expected") end
 add_requires("tinygltf", "eigen"--[[, "vulkan-memory-allocator-hpp", "cxxopts"]])
 -- normal libraries
 if not has_config("has_std_runtime_format") then add_requires("fmt") end
@@ -55,7 +55,7 @@ add_requires("spdlog"--[[, "libsdl3", "imgui"]])
 if not has_config("3rd_custom") then
 -- configurations of required libraries
 add_requireconfs("**out_ptr",       {override = true, version = "x.x.x"})
-add_requireconfs("**tl_expected",   {override = true, version = "x.x.x"})
+add_requireconfs("**zeus_expected", {override = true, version = "x.x.x"})
 add_requireconfs("**tinygltf",      {override = true, version = "x.x.x"})
 add_requireconfs("**eigen",         {override = true, version = "x.x.x"})
 -- add_requireconfs("**vulkan-memory-allocator-hpp", {override = true, version = "3.1.0"})
