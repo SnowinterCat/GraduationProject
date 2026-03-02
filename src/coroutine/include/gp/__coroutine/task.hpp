@@ -57,19 +57,22 @@ public:
 
     using promise_type = PromiseType;
 
-    // LocalTaskHandle() noexcept  = default;
+    LocalTaskHandle() noexcept                        = default;
     ~LocalTaskHandle() noexcept                       = default;
     LocalTaskHandle(const LocalTaskHandle &) noexcept = default;
     LocalTaskHandle(LocalTaskHandle &&) noexcept      = default;
 
-    // LocalTaskHandle(std::nullptr_t) noexcept {}
+    LocalTaskHandle(std::nullptr_t) noexcept {}
     LocalTaskHandle(StdHandleType handle) noexcept : coro::CoHandle(handle) {}
 
-    auto handle() -> StdHandleType & { return _stdHandle; }
-    auto handle() const -> const StdHandleType & { return _stdHandle; }
+    LocalTaskHandle &operator=(const LocalTaskHandle &rhs) noexcept = default;
+    LocalTaskHandle &operator=(LocalTaskHandle &&rhs) noexcept      = default;
 
-    auto promise() -> PromiseType & { return static_cast<PromiseType &>(_coPromise); }
-    auto promise() const -> PromiseType const & { return static_cast<PromiseType &>(_coPromise); }
+    // auto handle() -> StdHandleType & { return _stdHandle; }
+    // auto handle() const -> const StdHandleType & { return _stdHandle; }
+
+    auto promise() -> PromiseType & { return static_cast<PromiseType &>(*_coPromise); }
+    auto promise() const -> PromiseType const & { return static_cast<PromiseType &>(*_coPromise); }
 
     auto operator co_await() && noexcept -> coro::LocalTaskAwaiter<T>
     {
@@ -89,7 +92,7 @@ public:
     template <typename U>
     using CoHandleType = coro::LocalTaskHandle<U>;
 
-    LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(handle) {}
+    LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(&handle) {}
 
     constexpr bool await_ready() const noexcept // NOLINT
     {
@@ -100,24 +103,26 @@ public:
     {
         // _caller = CoHandleType<U>(caller);
         auto sch = caller.promise().scheduler(); //->push(_handle);
+        auto it  = sch.push(*_handle);
         // caller 进入 awaitQueue，等待的函数数量增加一
         // sch.push();
         // handle 进入 readyQueue
         // sch.
 
         std::println("caller: {}", caller.address());
-        std::println("this: {}", _handle.handle().address());
+        std::println("this: {}, handle: {}", static_cast<void *>(_handle),
+                     _handle->handle().address());
     }
-    constexpr auto await_resume() noexcept -> T && // NOLINT
+    constexpr auto await_resume() const noexcept -> T && // NOLINT
     {
         std::println("{}", typeid(T).name());
         // return T{};
-        return std::move(_handle.promise().value());
+        return std::move(_handle->promise().value());
     }
 
 protected:
-    coro::LocalTaskHandle<T> _handle;
-    coro::CoHandle          *_caller;
+    coro::LocalTaskHandle<T> *_handle;
+    coro::CoHandle           *_caller;
 };
 
 GP_CORO_END

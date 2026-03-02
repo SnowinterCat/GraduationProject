@@ -23,11 +23,11 @@ add_rules("mode.release", "mode.debug", "mode.releasedbg", "mode.minsizerel")
 add_rules("plugin.compile_commands.autoupdate", {lsp = "clangd", outputdir = ".vscode"})
 
 -- 编译设置
-option("3rd_custom",   {showmenu = true, default = false, type = "boolean"})
-option("3rd_kind",     {showmenu = true, default = get_config("kind"), values = {"static", "shared"}})
-option("3rd_mode",     {showmenu = true, default = "release", values = {"release", "debug"}})
-option("outputdir",    {showmenu = true, default = path.join(os.projectdir(), "bin"), type = "string"})
-option("buildversion", {showmenu = true, default = 0, type = "number"})
+option("3rd_custom",   {showmenu = true, type = "boolean", default = false})
+option("3rd_kind",     {showmenu = true, type = "string",  default = get_config("kind"), values = {"static", "shared"}})
+option("3rd_mode",     {showmenu = true, type = "string",  default = "release",          values = {"release", "debug"}})
+option("outputdir",    {showmenu = true, type = "string",  default = path.join(os.projectdir(), "bin")})
+option("buildversion", {showmenu = true, type = "number",  default = 0})
 
 includes("lua/check")
 check_macros("has_std_out_ptr",         "__cpp_lib_out_ptr",            {languages = stdcxx(), includes = "version"})
@@ -44,7 +44,7 @@ add_repositories("myrepo 3rd", {rootdir = os.scriptdir()})
 -- detected libraries
 -- if not is_plat("android") then add_requires("vulkansdk") end
 -- header-only libraries
-if not has_config("has_std_out_ptr") then add_requires("out_ptr") end
+if not has_config("has_std_out_ptr")  then add_requires("out_ptr") end
 if not has_config("has_std_expected") then add_requires("zeus_expected") end
 add_requires("tinygltf", "eigen"--[[, "vulkan-memory-allocator-hpp", "cxxopts"]])
 -- normal libraries

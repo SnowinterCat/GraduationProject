@@ -23,18 +23,18 @@ LocalTask<int> coro2()
     auto errc  = std::error_code();
     auto value = int();
 
-    std::println("[coro2]hello world");
+    std::println("[coro2]hello world, value: {}", static_cast<void *>(&value));
     std::tie(errc, value) = co_await coro1();
     co_return {std::error_code(), 2};
 }
 
 LocalTask<int> coro3()
 {
-    // auto errc  = std::error_code();
-    // auto value = int();
+    auto errc  = std::error_code();
+    auto value = int();
 
     std::println("[coro3]hello world");
-    // std::tie(errc, value) = co_await coro1();
+    std::tie(errc, value) = co_await coro1();
     co_return {std::error_code(), 3};
 }
 
@@ -42,10 +42,9 @@ int main()
 {
     auto sched = gp::coro::SingleThreadQueueScheduler();
     // auto handle1 = coro1();
-    auto handle2 = coro2();
     // auto handle3 = coro3();
-    std::println("handle2 addr: {}", handle2.handle().address());
-    // sched.push(std::move(handle2));
+    // std::println("handle2 addr: {}", handle2.handle().address());
+    auto handle2 = sched.push(coro2());
     // sched.push(std::move(handle2));
     // sched.push(std::move(handle3));
 

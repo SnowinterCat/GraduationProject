@@ -13,10 +13,11 @@
 #define GP_VERSION_BUILD ${VERSION_BUILD}
 #define GP_PLAT "${PLAT}"
 #define GP_ARCH "${ARCH}"
-${define GP_SHARED_BUILD}
 #define GP_MODE "${MODE}"
 #define GP_DEBUG ${DEBUG}
 #define GP_OS "${OS}"
+
+${define GP_SHARED_BUILD}
 
 #define GP_BEGIN                                                                                  \
     namespace gp                                                                                  \

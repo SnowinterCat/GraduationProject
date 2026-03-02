@@ -14,6 +14,43 @@ class GP_CORO_API CoPromise;
 class GP_CORO_API CoHandle;
 class GP_CORO_API CoScheduler;
 
+class GP_CORO_API CoHandle {
+    friend class coro::CoScheduler;
+
+public:
+    using PromiseType   = coro::CoPromise;
+    using StdHandleType = std::coroutine_handle<>;
+
+    CoHandle() noexcept;
+    ~CoHandle() noexcept;
+    CoHandle(const CoHandle &) noexcept;
+    CoHandle(CoHandle &&) noexcept;
+
+    CoHandle(std::nullptr_t) noexcept;
+
+    template <typename T>
+        requires(std::is_base_of_v<coro::CoPromise, T>)
+    CoHandle(std::coroutine_handle<T> stdHandle) noexcept
+        : _stdHandle(stdHandle), _coPromise(&stdHandle.promise())
+    {
+    }
+
+    CoHandle &operator=(const CoHandle &rhs) noexcept;
+    CoHandle &operator=(CoHandle &&rhs) noexcept;
+
+    auto handle() -> StdHandleType &;
+    auto handle() const -> StdHandleType const &;
+
+    auto promise() -> PromiseType &;
+    auto promise() const -> PromiseType const &;
+
+    void resume() { _stdHandle.resume(); }
+
+protected:
+    StdHandleType    _stdHandle;
+    coro::CoPromise *_coPromise;
+};
+
 class GP_CORO_API CoPromise {
     friend class coro::CoScheduler;
 
@@ -34,38 +71,8 @@ public:
 protected:
     std::exception_ptr _exception;
     coro::CoScheduler *_scheduler;
-};
-
-class GP_CORO_API CoHandle {
-public:
-    using PromiseType   = coro::CoPromise;
-    using StdHandleType = std::coroutine_handle<>;
-
-    // CoHandle() noexcept;
-    ~CoHandle() noexcept;
-    CoHandle(const CoHandle &) noexcept;
-    CoHandle(CoHandle &&) noexcept;
-
-    // CoHandle(std::nullptr_t) noexcept;
-
-    template <typename T>
-        requires(std::is_base_of_v<coro::CoPromise, T>)
-    CoHandle(std::coroutine_handle<T> stdHandle) noexcept
-        : _stdHandle(stdHandle), _coPromise(stdHandle.promise())
-    {
-    }
-
-    auto handle() -> StdHandleType &;
-    auto handle() const -> StdHandleType const &;
-
-    auto promise() -> PromiseType &;
-    auto promise() const -> PromiseType const &;
-
-    void resume() { _stdHandle.resume(); }
-
-protected:
-    StdHandleType    _stdHandle;
-    coro::CoPromise &_coPromise;
+    coro::CoHandle     _pre;
+    coro::CoHandle     _next;
 };
 
 GP_CORO_END

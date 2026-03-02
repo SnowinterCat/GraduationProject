@@ -2,6 +2,7 @@
 #include <gp/__coroutine/__config.hpp>
 // Standard Library
 #include <memory>
+#include <list>
 // System Library
 // Third-Party Library
 // Local Library
@@ -10,6 +11,8 @@
 GP_BEGIN
 GP_CORO_BEGIN
 
+// Todo:
+//  1. 用侵入式指针替代 std::list
 class CoScheduler {
 public:
     CoScheduler();
@@ -17,20 +20,22 @@ public:
 
     template <typename T>
         requires(std::is_base_of_v<coro::CoHandle, T>)
-    T push(T &&handle)
+    T push(T &handle)
     {
         handle.promise().scheduler() = this;
-        return handle;
+        return _readyQueuePushBack(handle);
     }
 
 protected:
-    struct QueueUnit {
-        std::unique_ptr<coro::CoHandle> handle;
-        QueueUnit                      *next;
-    };
-    QueueUnit *_readyQueueHead, *_readyQueueTail;
-    QueueUnit *_awaitQueueHead, *_awaitQueueTail;
-    QueueUnit *_completeQueuHead, *_completeQueueTail;
+    template <typename T>
+        requires(std::is_base_of_v<coro::CoHandle, T>)
+    T _readyQueuePushBack(T &handle);
+
+protected:
+    // std::list<coro::CoHandle> _readyQueue;
+    // std::list<coro::CoHandle> _awaitQueue;
+    // std::list<coro::CoHandle> _completeQueue;
+    coro::CoHandle _readyQueue;
 };
 
 class SingleThreadQueueScheduler : public CoScheduler {

@@ -1,7 +1,6 @@
 #include <gp/__coroutine/scheduler.hpp>
 // Standard Library
-#include <memory>
-#include <print>
+// #include <print>
 // System Library
 // Third-Party Library
 // Local Library
@@ -11,27 +10,16 @@ GP_CORO_BEGIN
 
 CoScheduler::CoScheduler()
 {
-    _readyQueueHead = _readyQueueTail = new QueueUnit(nullptr, nullptr);
-    _awaitQueueHead = _awaitQueueTail = new QueueUnit(nullptr, nullptr);
-    _completeQueuHead = _completeQueueTail = new QueueUnit(nullptr, nullptr);
+    _readyQueue._coPromise      = new coro::CoPromise();
+    _readyQueue.promise()._next = _readyQueue;
+    _readyQueue.promise()._pre  = _readyQueue;
 }
 CoScheduler::~CoScheduler()
 {
-    for (auto *i = _readyQueueHead; i != nullptr; i = i->next) {
-        if (i->handle != nullptr) {
-            i->handle->handle().destroy();
-        }
+    for (auto &i = _readyQueue.promise()._next; i.handle() != nullptr; i = i.promise()._next) {
+        i.handle().destroy();
     }
-    for (auto *i = _awaitQueueHead; i != nullptr; i = i->next) {
-        if (i->handle != nullptr) {
-            i->handle->handle().destroy();
-        }
-    }
-    for (auto *i = _completeQueuHead; i != nullptr; i = i->next) {
-        if (i->handle != nullptr) {
-            i->handle->handle().destroy();
-        }
-    }
+    delete _readyQueue._coPromise;
 }
 
 // void CoScheduler::push(coro::CoHandle &&handle)
@@ -52,19 +40,6 @@ void SingleThreadQueueScheduler::debugPrint()
     //              static_cast<void *>(_readyQueueTail));
     // for (const auto *i = _readyQueueHead; i != nullptr; i = i->promise().next()) {
     //     std::println("handle: {}", static_cast<const void *>(i));
-    // }
-}
-
-void SingleThreadQueueScheduler::_readyQueuPush(std::unique_ptr<coro::CoHandle> &&handle)
-{
-    // std::println("handle addr: {}", static_cast<void *>(&handle));
-    // if (_readyQueueTail != nullptr) [[likely]] {
-    //     _readyQueueTail->promise().next() = &handle;
-    // }
-    // handle.promise().next() = nullptr;
-    // _readyQueueTail         = &handle;
-    // if (_readyQueueHead == nullptr) [[unlikely]] {
-    //     _readyQueueHead = &handle;
     // }
 }
 
