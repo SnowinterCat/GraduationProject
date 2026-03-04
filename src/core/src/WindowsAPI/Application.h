@@ -1,7 +1,15 @@
 #pragma once
 #include <gp/config.hpp>
 
-#include "SimpleWindosAPI.h"
+#include <Windows.h>
+#include <wrl.h>
+// DirectX11运行库
+#include <dxgi.h>
+#include <d3d11.h>
+#include <d3d11shader.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+
 #include "../resource.h"
 
 class Application {

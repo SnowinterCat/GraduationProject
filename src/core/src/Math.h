@@ -3,7 +3,7 @@
 
 #pragma warning(push,0)
 
-#include "EigenMath/Dense"
+#include <Eigen/Dense>
 
 #pragma warning(pop)
 

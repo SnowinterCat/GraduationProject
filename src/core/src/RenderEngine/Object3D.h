@@ -2,7 +2,16 @@
 #include <gp/config.hpp>
 
 #include <vector>
-#include "../WindowsAPI/SimpleWindosAPI.h"
+
+#include <Windows.h>
+#include <wrl.h>
+// DirectX11运行库
+#include <dxgi.h>
+#include <d3d11.h>
+#include <d3d11shader.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+
 #include "../Math.h"
 #include "../DebugException.h"
 

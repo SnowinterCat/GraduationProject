@@ -1,11 +1,18 @@
 #pragma once
 #include <gp/config.hpp>
 
-#include "WindowsAPI/SimpleWindosAPI.h"
-
 #include <exception>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
+
+#include <Windows.h>
+#include <wrl.h>
+// DirectX11运行库
+#include <dxgi.h>
+#include <d3d11.h>
+#include <d3d11shader.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
 
 constexpr unsigned int DebugLens = 256u;
 

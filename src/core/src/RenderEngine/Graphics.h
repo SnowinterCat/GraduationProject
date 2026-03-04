@@ -1,12 +1,21 @@
 #pragma once
 #include <gp/config.hpp>
 
-#include "../WindowsAPI.h"
+#include <Windows.h>
+#include <wrl.h>
+// DirectX11运行库
+#include <dxgi.h>
+#include <d3d11.h>
+#include <d3d11shader.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+
 #include "Camera.h"
 #include "Object3D.h"
-#include "../Registration.h"
 
+#include "../Registration.h"
 #include "../DebugException.h"
+#include "../WindowsAPI/Timer.h"
 
 class Graphics {
 	static const unsigned int BufferLens = 256u;

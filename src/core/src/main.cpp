@@ -1,7 +1,8 @@
 #include <gp/config.hpp>
 
 #include <future>
-#include "WindowsAPI.h"
+
+#include "WindowsAPI/Application.h"
 #include "RenderEngine.h"
 
 #include "DebugException.h"
