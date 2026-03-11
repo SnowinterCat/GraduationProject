@@ -48,26 +48,26 @@ concept KDTreeNodeAble = HasDistanceType<T> && HasDimensionValue<T> && CanConver
                          HasDistanceFunction<T>;
 
 template <KDTreeNodeAble T>
-class KDTree {
+class GP_ALGORITHM_API KDTree {
 public:
     using ValueType    = T;
     using DistanceType = T::DistanceType;
     using PointType    = std::array<DistanceType, T::Dimension>;
 
     struct PointNode {
-        T         point;
-        IndexType index;
+        T         point; // 数据点
+        IndexType index; // 记录点中的数据点在源视图中的索引
         auto      operator<=>(const PointNode &other) const = default;
     };
     struct TreeNode {
-        IndexType     lson;
-        IndexType     rson;
-        DimensionType dim; // dimension
+        IndexType     lson; // 树节点的左孩子
+        IndexType     rson; // 树节点的右孩子
+        DimensionType dim;  // 树节点通过 dim 维度对孩子进行拆分
         auto          operator<=>(const TreeNode &other) const = default;
     };
     struct HeapNode {
-        DistanceType distance;
-        IndexType    index;
+        DistanceType distance; // 距离/费用
+        IndexType    index;    // 记录点中的数据点在源视图中的索引
         auto         operator<=>(const HeapNode &other) const = default;
     };
 
@@ -75,11 +75,53 @@ public:
     static constexpr auto DistanceMin = std::numeric_limits<DistanceType>::min();
 
 public:
+    /**
+     * @brief 设置需要使用 KDTree 查询的数据
+     *
+     * @param arr T 类型的一组数据点的视图
+     * @details 由于需要对数据点排序，视图中的数据点会被完全复制一份。
+                但请不要清理源视图指向的数据，查询时返回的索引是源视图中的索引
+     */
     void setElement(std::span<T> arr);
+    /**
+     * @brief 构建 KDTree
+     *
+     * @details 需要使用 setElement 函数设置完数据之后，再调用此函数
+     */
     void buildTree();
+    /**
+     * @brief 查询与 ta 数据点最临近的数据点在源视图中的索引号
+     *
+     * @param ta 一个 T 类型的任意数据点
+     * @param disMax 距离上限，默认是 std::numeric_limits<DistanceType>::max()
+     * @return 最临近的数据点在源视图中的索引号
+     */
     auto findNearest(const T &ta, DistanceType disMax = DistanceMax) -> IndexType;
+    /**
+     * @brief 查询与 ta 数据点最疏远的数据点在源视图中的索引号
+     *
+     * @param ta 一个 T 类型的任意数据点
+     * @param disMin 距离下限，默认是 std::numeric_limits<DistanceType>::min()
+     * @return 最疏远的数据点在源视图中的索引号
+     */
     auto findFarthest(const T &ta, DistanceType disMin = DistanceMin) -> IndexType;
+    /**
+     * @brief 查询与 ta 数据点第 kth 临近的数据点在源视图中的索引号
+     *
+     * @param ta 一个 T 类型的任意数据点
+     * @param kth 查询第 kth 临近
+     * @param disMax 距离上限，默认是 std::numeric_limits<DistanceType>::max()
+     * @return 第 kth 临近的数据点在源视图中的索引号
+     */
     auto findKthNearest(const T &ta, int kth, DistanceType disMax = DistanceMax) -> IndexType;
+    /**
+     * @brief 查询与 ta 数据点第 kth 疏远的数据点在源视图中的索引号
+     *
+     * @param ta 一个 T 类型的任意数据点
+     * @param kth 查询第 kth 疏远
+     * @param disMin 距离下限，默认是 std::numeric_limits<DistanceType>::min()
+     * @return 第 kth 疏远的数据点在源视图中的索引号
+     */
     auto findKthFarthest(const T &ta, int kth, DistanceType disMin = DistanceMin) -> IndexType;
 
 protected:
@@ -91,15 +133,15 @@ protected:
     auto _maxDis(const T &ta, IndexType now) -> DistanceType;
 
 protected:
-    IndexType              _root;
-    std::vector<PointNode> _pointNodes;
-    std::vector<TreeNode>  _treeNodes;
+    IndexType              _root;       // KDTree 根节点索引号
+    std::vector<PointNode> _pointNodes; // KDTree 记录点信息
+    std::vector<TreeNode>  _treeNodes;  // KDTree 树节点信息
 
-    std::vector<IndexType> _dimensionMin[T::Dimension];
-    std::vector<IndexType> _dimensionMax[T::Dimension];
+    std::vector<IndexType> _dimensionMin[T::Dimension]; // KDTree 树节点在各个维度的最小记录点编号
+    std::vector<IndexType> _dimensionMax[T::Dimension]; // KDTree 树节点在各个维度的最大记录点编号
 
-    std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<>> _qMin;
-    std::priority_queue<HeapNode, std::vector<HeapNode>, std::less<>>    _qMax;
+    std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<>> _qMin; // 临近点查询的堆
+    std::priority_queue<HeapNode, std::vector<HeapNode>, std::less<>>    _qMax; // 疏远点查询的堆
 };
 
 // public
@@ -330,10 +372,10 @@ auto KDTree<T>::_maxDis(const T &ta, IndexType now) -> DistanceType
     DistanceType disP;
     DistanceType disQ;
     for (DimensionType i = 0; i < T::Dimension; ++i) {
-        disP = static_cast<PointType>(ta)[i] -
-               static_cast<PointType>(_pointNodes[_dimensionMin[i][now]].point)[i];
-        disQ = static_cast<PointType>(ta)[i] -
-               static_cast<PointType>(_pointNodes[_dimensionMax[i][now]].point)[i];
+        disP    = static_cast<PointType>(ta)[i] -
+                  static_cast<PointType>(_pointNodes[_dimensionMin[i][now]].point)[i];
+        disQ    = static_cast<PointType>(ta)[i] -
+                  static_cast<PointType>(_pointNodes[_dimensionMax[i][now]].point)[i];
         temp[i] = std::abs(disP) > std::abs(disQ) ? disP : disQ;
     }
     return T::distance(temp, PointType{});
