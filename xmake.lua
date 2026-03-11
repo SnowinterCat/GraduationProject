@@ -1,15 +1,15 @@
--- 工程设置
+-- project configuration
 set_project("graduation-project")
 set_version("0.0.1", {build = tostring(get_config("buildversion")), soname = true})
 set_xmakever("3.0.0")
-option("alias", {showmenu = false, default = "gp"}) -- 工程名缩写
+option("alias", {showmenu = false, default = "gp"}) -- project abbreviation
 
 set_configvar("LEGAL_COPYRIGHT", "Copyright (C) 2024 SnowinterCat")
 set_configvar("PROJECT_NAME", "graduation-project")
 
--- 全局设置
-option("stdc",   {showmenu = true, default = 23, values = {23}})
-option("stdcxx", {showmenu = true, default = 26, values = {26, 23}})
+-- global configuration
+option("stdc",   {showmenu = true, default = 23, values = {23, 17, 11, 99}})
+option("stdcxx", {showmenu = true, default = 26, values = {26, 23, 17, 11}})
 function stdc()   return "c"   .. tostring(get_config("stdc"))   end
 function stdcxx() return "c++" .. tostring(get_config("stdcxx")) end
 
@@ -18,11 +18,11 @@ set_warnings("allextra")
 set_encodings("utf-8")
 set_exceptions("cxx")
 
--- 添加编译选项
+-- compile rules
 add_rules("mode.release", "mode.debug", "mode.releasedbg", "mode.minsizerel")
 add_rules("plugin.compile_commands.autoupdate", {lsp = "clangd", outputdir = ".vscode"})
 
--- 编译设置
+-- compile configuration
 option("3rd_custom",   {showmenu = true, type = "boolean", default = false})
 option("3rd_kind",     {showmenu = true, type = "string",  default = get_config("kind"), values = {"static", "shared"}})
 option("3rd_mode",     {showmenu = true, type = "string",  default = "release",          values = {"release", "debug"}})
@@ -34,7 +34,7 @@ check_macros("has_std_out_ptr",         "__cpp_lib_out_ptr",            {languag
 check_macros("has_std_expected",        "__cpp_lib_expected",           {languages = stdcxx(), includes = "version"})
 check_macros("has_std_runtime_format",  "__cpp_lib_format >= 202311L",  {languages = stdcxx(), includes = "version"})
 
--- 隐藏设置、隐藏目标、打包命令
+-- hide options, hide targets, pack targets
 includes("lua/hideoptions.lua")
 includes("lua/hidetargets.lua")
 -- includes("lua/pack.lua")
