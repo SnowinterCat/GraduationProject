@@ -6,7 +6,7 @@ GP_STL_BEGIN
 void FileCloser::operator()(FILE *file)
 {
     if (file != nullptr) {
-        std::fclose(file);
+        (void)std::fclose(file);
     }
 }
 

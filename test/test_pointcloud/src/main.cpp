@@ -13,8 +13,9 @@ int main(int argc, const char *const *argvloc)
 {
     // 全平台字符编码强制修改为 UTF-8
     auto [argu8, argvec, argstr] = argvloc2utf8(argc, argvloc);
-    std::setlocale(LC_ALL, ".UTF-8");
+    (void)std::setlocale(LC_ALL, ".UTF-8"); // NOLINT(concurrency-*):Only Once In main
     // 保存 运行路径 和 工作目录
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     std::filesystem::path execPath = std::filesystem::weakly_canonical(argu8[0]);
     std::filesystem::path workDir  = execPath.parent_path().parent_path().parent_path();
 

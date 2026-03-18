@@ -24,7 +24,7 @@ public:
     static constexpr auto DistanceMax = std::numeric_limits<DistanceType>::max();
     static constexpr auto DistanceMin = std::numeric_limits<DistanceType>::max();
 
-    typedef struct Edge {
+    struct Edge {
         int32_t      source;      // 源点
         int32_t      target;      // 目标点
         DistanceType cost;        // 路径花费
@@ -33,28 +33,28 @@ public:
         int32_t      inEdgeNext;  // 下一条入边
         int32_t      outEdgePre;  // 上一条出边
         int32_t      inEdgePre;   // 上一条入边
-    } Edge;
-    typedef struct Vertex {
+    };
+    struct Vertex {
         int32_t      outEdge;   // 顶点的第一条出边
         int32_t      inEdge;    // 顶点的第一条入边
         int32_t      preVertex; // Dijkstra 中用于保存上一个顶点
         bool         visit;     // Dijkstra 中用于标记是否访问过
         DistanceType distance;  // Dijkstra 中用于保存距离
-    } Vertex;
-    typedef struct ErrorDistance {
+    };
+    struct ErrorDistance {
         std::error_code errc;
         DistanceType    distance;
-    } ErrorDistance;
-    typedef struct ErrorDistanceDistance {
+    };
+    struct ErrorDistanceDistance {
         std::error_code errc;
         DistanceType    cost;
         DistanceType    flow;
-    } ErrorDistanceDistance;
-    typedef struct HeapNode {
+    };
+    struct HeapNode {
         DistanceType cost;
         int32_t      vertex;
         auto         operator<=>(const HeapNode &other) const = default;
-    } HeapNode;
+    };
 
     void resize(int32_t vertexCnt);
     void reserve(int32_t vertexCnt);

@@ -26,12 +26,15 @@ concept HasDistanceType =
 template <typename T>
 concept HasDimensionValue = std::integral<decltype(T::Dimension)> && T::Dimension > 0;
 
+template <typename T, typename U>
+concept CanExplicitConvertTo = requires { static_cast<U>(std::declval<T>()); };
+
 template <typename T>
-concept CanConvertToPointType =
-    std::convertible_to<std::remove_cvref_t<T>,
-                        std::array<typename T::DistanceType, T::Dimension>> &&
-    std::convertible_to<const std::remove_cvref_t<T>,
-                        std::array<typename T::DistanceType, T::Dimension>>;
+concept CanExplicitConvertToPointType =
+    CanExplicitConvertTo<std::remove_cvref_t<T>,
+                         std::array<typename T::DistanceType, T::Dimension>> &&
+    CanExplicitConvertTo<const std::remove_cvref_t<T>,
+                         std::array<typename T::DistanceType, T::Dimension>>;
 
 template <typename T>
 concept HasDistanceFunction =
@@ -44,8 +47,8 @@ concept HasDistanceFunction =
                                         std::array<typename T::DistanceType, T::Dimension>>>;
 
 template <typename T>
-concept KDTreeNodeAble = HasDistanceType<T> && HasDimensionValue<T> && CanConvertToPointType<T> &&
-                         HasDistanceFunction<T>;
+concept KDTreeNodeAble = HasDistanceType<T> && HasDimensionValue<T> &&
+                         CanExplicitConvertToPointType<T> && HasDistanceFunction<T>;
 
 template <KDTreeNodeAble T>
 class GP_ALGORITHM_API KDTree {
@@ -137,8 +140,8 @@ protected:
     std::vector<PointNode> _pointNodes; // KDTree 记录点信息
     std::vector<TreeNode>  _treeNodes;  // KDTree 树节点信息
 
-    std::vector<IndexType> _dimensionMin[T::Dimension]; // KDTree 树节点在各个维度的最小记录点编号
-    std::vector<IndexType> _dimensionMax[T::Dimension]; // KDTree 树节点在各个维度的最大记录点编号
+    std::array<std::vector<IndexType>, T::Dimension> _dimensionMin; // KDTree 树节点各维度最小记录点
+    std::array<std::vector<IndexType>, T::Dimension> _dimensionMax; // KDTree 树节点各维度最大记录点
 
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<>> _qMin; // 临近点查询的堆
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::less<>>    _qMax; // 疏远点查询的堆
