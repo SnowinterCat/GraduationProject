@@ -162,8 +162,8 @@ void KDTree<T>::setElement(std::span<T> arr)
         _treeNodes[i] = {-1, -1, -1};
     }
     for (DimensionType i = 0; i < T::Dimension; ++i) {
-        _dimensionMin[i].resize(num);
-        _dimensionMax[i].resize(num);
+        _dimensionMin.at(i).resize(num);
+        _dimensionMax.at(i).resize(num);
     }
 }
 
@@ -216,8 +216,8 @@ auto KDTree<T>::findKthFarthest(const T &ta, int kth, DistanceType disMin) -> In
 template <KDTreeNodeAble T>
 auto KDTree<T>::_buildTree(IndexType left, IndexType right, IndexType dim) -> IndexType
 {
-    auto lessCompare = [dim](const PointNode &aa, const PointNode &bb) {
-        return static_cast<PointType>(aa.point)[dim] - static_cast<PointType>(bb.point)[dim] < 0;
+    auto lessCompare = [dim](const PointNode &aa, const PointNode &bb) -> bool {
+        return static_cast<PointType>(aa.point).at(dim) < static_cast<PointType>(bb.point).at(dim);
     };
     IndexType mid = (left + right) >> 1;
     std::nth_element(_pointNodes.begin() + left, _pointNodes.begin() + mid,
@@ -237,35 +237,35 @@ template <KDTreeNodeAble T>
 auto KDTree<T>::_update(IndexType now) -> IndexType
 {
     for (DimensionType i = 0; i < T::Dimension; ++i) {
-        _dimensionMin[i][now] = _dimensionMax[i][now] = now;
+        _dimensionMin.at(i)[now] = _dimensionMax.at(i)[now] = now;
     }
     IndexType lson = _treeNodes[now].lson;
     IndexType rson = _treeNodes[now].rson;
     if (lson >= 0) {
         for (DimensionType i = 0; i < T::Dimension; ++i) {
-            const auto &nowMin = _pointNodes[_dimensionMin[i][now]].point;
-            const auto &nowMax = _pointNodes[_dimensionMax[i][now]].point;
-            const auto &lMin   = _pointNodes[_dimensionMin[i][lson]].point;
-            const auto &lMax   = _pointNodes[_dimensionMax[i][lson]].point;
-            if (static_cast<PointType>(nowMin)[i] - static_cast<PointType>(lMin)[i] > 0) {
-                _dimensionMin[i][now] = _dimensionMin[i][lson];
+            const auto &nowMin = _pointNodes[_dimensionMin.at(i)[now]].point;
+            const auto &nowMax = _pointNodes[_dimensionMax.at(i)[now]].point;
+            const auto &lMin   = _pointNodes[_dimensionMin.at(i)[lson]].point;
+            const auto &lMax   = _pointNodes[_dimensionMax.at(i)[lson]].point;
+            if (static_cast<PointType>(nowMin).at(i) - static_cast<PointType>(lMin).at(i) > 0) {
+                _dimensionMin.at(i)[now] = _dimensionMin.at(i)[lson];
             }
-            if (static_cast<PointType>(nowMax)[i] - static_cast<PointType>(lMax)[i] < 0) {
-                _dimensionMax[i][now] = _dimensionMax[i][lson];
+            if (static_cast<PointType>(nowMax).at(i) - static_cast<PointType>(lMax).at(i) < 0) {
+                _dimensionMax.at(i)[now] = _dimensionMax.at(i)[lson];
             }
         }
     }
     if (rson >= 0) {
         for (DimensionType i = 0; i < T::Dimension; ++i) {
-            const auto &nowMin = _pointNodes[_dimensionMin[i][now]].point;
-            const auto &nowMax = _pointNodes[_dimensionMax[i][now]].point;
-            const auto &rMin   = _pointNodes[_dimensionMin[i][rson]].point;
-            const auto &rMax   = _pointNodes[_dimensionMax[i][rson]].point;
-            if (static_cast<PointType>(nowMin)[i] - static_cast<PointType>(rMin)[i] > 0) {
-                _dimensionMin[i][now] = _dimensionMin[i][rson];
+            const auto &nowMin = _pointNodes[_dimensionMin.at(i)[now]].point;
+            const auto &nowMax = _pointNodes[_dimensionMax.at(i)[now]].point;
+            const auto &rMin   = _pointNodes[_dimensionMin.at(i)[rson]].point;
+            const auto &rMax   = _pointNodes[_dimensionMax.at(i)[rson]].point;
+            if (static_cast<PointType>(nowMin).at(i) - static_cast<PointType>(rMin).at(i) > 0) {
+                _dimensionMin.at(i)[now] = _dimensionMin.at(i)[rson];
             }
-            if (static_cast<PointType>(nowMax)[i] - static_cast<PointType>(rMax)[i] < 0) {
-                _dimensionMax[i][now] = _dimensionMax[i][rson];
+            if (static_cast<PointType>(nowMax).at(i) - static_cast<PointType>(rMax).at(i) < 0) {
+                _dimensionMax.at(i)[now] = _dimensionMax.at(i)[rson];
             }
         }
     }
@@ -278,8 +278,9 @@ void KDTree<T>::_findNearest(const T &ta, IndexType now, DistanceType disMax)
     if (now < 0) {
         return;
     }
-    DistanceType nowDis = T::distance(ta, _pointNodes[now].point);
-    if (nowDis < _qMax.top().distance) {
+    DistanceType nowDis =
+        T::distance(static_cast<PointType>(ta), static_cast<PointType>(_pointNodes[now].point));
+    if (HeapNode(nowDis, _pointNodes[now].index) < _qMax.top()) {
         _qMax.pop();
         _qMax.push({nowDis, _pointNodes[now].index});
     }
@@ -317,8 +318,9 @@ void KDTree<T>::_findFarthest(const T &ta, IndexType now, DistanceType disMin)
     if (now < 0) {
         return;
     }
-    DistanceType nowDis = T::distance(ta, _pointNodes[now].point);
-    if (nowDis > _qMin.top().distance) {
+    DistanceType nowDis =
+        T::distance(static_cast<PointType>(ta), static_cast<PointType>(_pointNodes[now].point));
+    if (HeapNode(nowDis, _pointNodes[now].index) > _qMin.top()) {
         _qMin.pop();
         _qMin.push({nowDis, _pointNodes[now].index});
     }
@@ -357,13 +359,14 @@ auto KDTree<T>::_minDis(const T &ta, IndexType now) -> DistanceType
     DistanceType disP;
     DistanceType disQ;
     for (DimensionType i = 0; i < T::Dimension; ++i) {
-        disP    = std::max(static_cast<PointType>(ta)[i] -
-                               static_cast<PointType>(_pointNodes[_dimensionMax[i][now]].point)[i],
-                           DistanceType(0));
-        disQ    = std::max(static_cast<PointType>(_pointNodes[_dimensionMin[i][now]].point)[i] -
-                               static_cast<PointType>(ta)[i],
-                           DistanceType(0));
-        temp[i] = disP + disQ;
+        disP =
+            std::max(static_cast<PointType>(ta).at(i) -
+                         static_cast<PointType>(_pointNodes[_dimensionMax.at(i)[now]].point).at(i),
+                     DistanceType(0));
+        disQ = std::max(static_cast<PointType>(_pointNodes[_dimensionMin.at(i)[now]].point).at(i) -
+                            static_cast<PointType>(ta).at(i),
+                        DistanceType(0));
+        temp.at(i) = disP + disQ;
     }
     return T::distance(temp, PointType{});
 }
@@ -375,11 +378,11 @@ auto KDTree<T>::_maxDis(const T &ta, IndexType now) -> DistanceType
     DistanceType disP;
     DistanceType disQ;
     for (DimensionType i = 0; i < T::Dimension; ++i) {
-        disP    = static_cast<PointType>(ta)[i] -
-                  static_cast<PointType>(_pointNodes[_dimensionMin[i][now]].point)[i];
-        disQ    = static_cast<PointType>(ta)[i] -
-                  static_cast<PointType>(_pointNodes[_dimensionMax[i][now]].point)[i];
-        temp[i] = std::abs(disP) > std::abs(disQ) ? disP : disQ;
+        disP       = static_cast<PointType>(ta).at(i) -
+                     static_cast<PointType>(_pointNodes[_dimensionMin.at(i)[now]].point).at(i);
+        disQ       = static_cast<PointType>(ta).at(i) -
+                     static_cast<PointType>(_pointNodes[_dimensionMax.at(i)[now]].point).at(i);
+        temp.at(i) = std::abs(disP) > std::abs(disQ) ? disP : disQ;
     }
     return T::distance(temp, PointType{});
 }

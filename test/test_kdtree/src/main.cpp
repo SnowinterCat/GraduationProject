@@ -1,49 +1,58 @@
+// Use this question for testing: https://www.luogu.com.cn/problem/P2093
 #include <gp/config.hpp>
 // Standard Library
 #include <print>
+#include <iostream>
 // System Library
 // Third-Party Library
 // Local Library
 #include <gp/algorithm/KDTree.hpp>
 
-struct Point3D {
-    static constexpr gp::alg::DimensionType Dimension = 3;
+struct Point2D {
+    using DistanceType = int64_t;
 
-    using DistanceType = float;
-    using PointType    = std::array<DistanceType, Dimension>;
+    static constexpr gp::alg::DimensionType Dimension = 2;
 
-    explicit operator PointType() const
+    static auto distance(const std::array<DistanceType, Dimension> &aa,
+                         const std::array<DistanceType, Dimension> &bb) -> DistanceType
     {
-        PointType temp = {
-            static_cast<float>(a[0]),
-            static_cast<float>(a[1]),
-            static_cast<float>(a[2]),
-        };
-        return temp;
+        DistanceType disX = aa[0] - bb[0];
+        DistanceType disY = aa[1] - bb[1];
+        return (disX * disX) + (disY * disY);
     }
 
-    static auto distance(PointType pa, PointType pb) -> DistanceType
+    auto     operator<=>(const Point2D &) const = default;
+    explicit operator std::array<DistanceType, Dimension>() const
     {
-        const PointType temp = {pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]};
-        return (temp[0] * temp[0]) + (temp[1] * temp[1]) + (temp[2] * temp[2]);
+        return {static_cast<DistanceType>(x), static_cast<DistanceType>(y)};
     }
 
-    std::array<int, 3> a;
+    int64_t x;
+    int64_t y;
 };
 
-int main()
+auto main() -> int
 {
-    gp::alg::KDTree<Point3D> aa;
+    auto num    = int();
+    auto cnt    = int();
+    auto points = std::vector<Point2D>();
+    std::cin >> num;
+    points.resize(num);
+    for (int i = 0; i < num; ++i) {
+        std::cin >> points[i].x >> points[i].y;
+    }
 
-    std::vector<Point3D> points = {
-        {1, 1, 1},
-        {2, 2, 2}
-    };
-
-    aa.setElement(points);
-    aa.buildTree();
-    std::println("Nearest Point's index: {}", aa.findKthNearest({1, 2, 1}, 1));
-    std::println("Farthest Point's index: {}", aa.findKthFarthest({1, 2, 1}, 1));
-    std::println("3th Nearest Point's index: {}", aa.findKthNearest({1, 2, 1}, 3));
+    gp::alg::KDTree<Point2D> tree;
+    tree.setElement(points);
+    tree.buildTree();
+    std::cin >> cnt;
+    auto px = int64_t();
+    auto py = int64_t();
+    auto pk = int();
+    for (int i = 0; i < cnt; ++i) {
+        std::cin >> px >> py >> pk;
+        auto index = tree.findKthFarthest(Point2D{.x = px, .y = py}, pk);
+        std::println("{}", index + 1);
+    }
     return 0;
 }
