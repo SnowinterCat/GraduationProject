@@ -31,7 +31,7 @@ public:
         std::conditional_t<std::is_same_v<DefaultFlowType, void>, std::monostate, DefaultFlowType>;
 
     static constexpr auto CostMax = std::numeric_limits<CostType>::max();
-    static constexpr auto CostMin = std::numeric_limits<CostType>::max();
+    static constexpr auto CostMin = std::numeric_limits<CostType>::min();
 
     struct Edge {
         int32_t  source;      // 源点
@@ -66,6 +66,7 @@ public:
     using DijkstraStruct =
         std::tuple<std::vector<bool>, std::vector<CostType>, std::priority_queue<HeapNode>>;
 
+    DirectedGraph() = default;
     ~DirectedGraph();
     DirectedGraph(const DirectedGraph &) noexcept = default;
     DirectedGraph(DirectedGraph &&) noexcept      = default;
@@ -82,7 +83,8 @@ public:
     auto removeOutEdges(int32_t source) noexcept -> std::error_code;
     auto removeInEdges(int32_t target) noexcept -> std::error_code;
 
-    auto dijkstra(int32_t source, int32_t target) -> std::tuple<std::error_code, CostType>;
+    auto dijkstra(int32_t source, int32_t target, DijkstraStruct &dijStruct)
+        -> std::tuple<std::error_code, CostType>;
 
 protected:
     std::vector<Vertex> _vertices;
@@ -92,8 +94,10 @@ template <NotVoid CostType, typename DefaultFlowType>
 DirectedGraph<CostType, DefaultFlowType>::~DirectedGraph()
 {
     for (const auto &vertex : _vertices) {
-        for (auto *edge = vertex.outEdge; edge != nullptr; edge = edge->outEdgeNext) {
+        for (auto *edge = vertex.outEdge; edge != nullptr;) {
+            auto *nextEdge = edge->outEdgeNext;
             delete edge;
+            edge = nextEdge;
         }
     }
 }
@@ -201,7 +205,8 @@ auto DirectedGraph<CostType, DefaultFlowType>::removeInEdges(int32_t target) noe
 }
 
 template <NotVoid CostType, typename DefaultFlowType>
-auto DirectedGraph<CostType, DefaultFlowType>::dijkstra(int32_t source, int32_t target)
+auto DirectedGraph<CostType, DefaultFlowType>::dijkstra(int32_t source, int32_t target,
+                                                        DijkstraStruct &dijStruct)
     -> std::tuple<std::error_code, CostType>
 {
     if (source >= static_cast<int32_t>(_vertices.size()) ||
@@ -209,34 +214,29 @@ auto DirectedGraph<CostType, DefaultFlowType>::dijkstra(int32_t source, int32_t 
         return {std::make_error_code(std::errc::invalid_argument), static_cast<CostType>(0)};
     }
 
-    // for (auto &vertex : _vertices) {
-    //     vertex.visit    = false;
-    //     vertex.distance = std::numeric_limits<CostType>::max();
-    // }
-    // _vertices[source].visit    = true;
-    // _vertices[source].distance = static_cast<CostType>(0);
+    auto &[visit, distance, queue] = dijStruct;
+    visit.resize(_vertices.size(), false);
+    distance.resize(_vertices.size(), CostMax);
+    visit[source]    = true;
+    distance[source] = static_cast<CostType>(0);
 
-    // _queue.push(HeapNode{0, source});
-    // while (!_queue.empty()) {
-    //     auto temp = _queue.top();
-    //     _queue.pop();
-    //     if (temp.vertex >= static_cast<int32_t>(_vertices.size()) &&
-    //     _vertices[temp.vertex].visit) {
-    //         continue;
-    //     }
-    //     _vertices[temp.vertex].visit = true;
-    //     for (int32_t i = _vertices[temp.vertex].outEdge; i != IndexMax; i =
-    //     _edges[i].outEdgeNext) {
-    //         int32_t to = _edges[i].target;
-    //         if (to < static_cast<int32_t>(_vertices.size()) &&
-    //             _vertices[to].distance > _edges[i].cost + temp.cost) {
-    //             _vertices[to].distance = _edges[i].cost + temp.cost;
-    //             _queue.push({_vertices[to].distance, to});
-    //         }
-    //     }
-    // }
-
-    // return {std::error_code(), _vertices[target].distance};
+    queue.push(HeapNode{0, source});
+    while (!queue.empty()) {
+        auto [cost, vertex] = queue.top();
+        queue.pop();
+        if (vertex >= static_cast<int32_t>(_vertices.size()) && visit[vertex]) {
+            continue;
+        }
+        visit[vertex] = true;
+        for (auto *edge = _vertices[vertex].outEdge; edge != nullptr; edge = edge->outEdgeNext) {
+            int32_t to = edge->target;
+            if (to < static_cast<int32_t>(_vertices.size()) && distance[to] > edge->cost + cost) {
+                distance[to] = edge->cost + cost;
+                queue.push({distance[to], to});
+            }
+        }
+    }
+    return {std::error_code(), distance[target]};
 }
 
 GP_ALGORITHM_END
