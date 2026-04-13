@@ -13,32 +13,34 @@ GP_CORO_BEGIN
 
 // Todo:
 //  1. 用侵入式指针替代 std::list
-class CoScheduler {
+class GP_CORO_API CoScheduler {
 public:
+    using Iterator = std::list<coro::CoHandle>::iterator;
+
     CoScheduler();
     ~CoScheduler();
 
+    CoScheduler(const CoScheduler &) noexcept = delete;
+    CoScheduler(CoScheduler &&) noexcept;
+
+    auto operator=(const CoScheduler &rhs) noexcept -> CoScheduler & = delete;
+    auto operator=(CoScheduler &&rhs) noexcept -> CoScheduler &;
+
     template <typename T>
         requires(std::is_base_of_v<coro::CoHandle, T>)
-    T push(T &handle)
+    auto pushBack(T &&handle) -> Iterator
     {
-        handle.promise().scheduler() = this;
-        return _readyQueuePushBack(handle);
+        handle.promise().scheduler(this);
+        return _readyQueue.insert(_readyQueue.end(), std::forward<T &&>(handle));
     }
 
 protected:
-    template <typename T>
-        requires(std::is_base_of_v<coro::CoHandle, T>)
-    T _readyQueuePushBack(T &handle);
-
-protected:
-    // std::list<coro::CoHandle> _readyQueue;
+    std::list<coro::CoHandle> _readyQueue;
     // std::list<coro::CoHandle> _awaitQueue;
     // std::list<coro::CoHandle> _completeQueue;
-    coro::CoHandle _readyQueue;
 };
 
-class SingleThreadQueueScheduler : public CoScheduler {
+class GP_CORO_API SingleThreadQueueScheduler : public CoScheduler {
 public:
     void debugPrint();
 

@@ -1,6 +1,5 @@
 #include <gp/__coroutine/scheduler.hpp>
 // Standard Library
-// #include <print>
 // System Library
 // Third-Party Library
 // Local Library
@@ -8,18 +7,23 @@
 GP_BEGIN
 GP_CORO_BEGIN
 
-CoScheduler::CoScheduler()
-{
-    _readyQueue._coPromise      = new coro::CoPromise();
-    _readyQueue.promise()._next = _readyQueue;
-    _readyQueue.promise()._pre  = _readyQueue;
-}
+CoScheduler::CoScheduler() = default;
 CoScheduler::~CoScheduler()
 {
-    for (auto &i = _readyQueue.promise()._next; i.handle() != nullptr; i = i.promise()._next) {
-        i.handle().destroy();
+    for (const auto &handle : _readyQueue) {
+        handle.handle().destroy();
     }
-    delete _readyQueue._coPromise;
+    _readyQueue.clear();
+}
+
+CoScheduler::CoScheduler(CoScheduler &&rhs) noexcept
+    : _readyQueue(std::exchange(rhs._readyQueue, {}))
+{
+}
+auto CoScheduler::operator=(CoScheduler &&rhs) noexcept -> CoScheduler &
+{
+    this->_readyQueue = std::exchange(rhs._readyQueue, {});
+    return *this;
 }
 
 // void CoScheduler::push(coro::CoHandle &&handle)

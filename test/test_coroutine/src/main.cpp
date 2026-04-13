@@ -10,7 +10,7 @@
 template <typename T>
 using LocalTask = gp::coro::LocalTaskHandle<std::tuple<std::error_code, T>>;
 
-LocalTask<float> coro1()
+auto coro1() -> LocalTask<float>
 {
     std::println("[coro1]hello world1");
     co_await std::suspend_always();
@@ -18,17 +18,18 @@ LocalTask<float> coro1()
     co_return {std::error_code(), 1};
 }
 
-LocalTask<int> coro2()
+auto coro2() -> LocalTask<int>
 {
     auto errc  = std::error_code();
     auto value = int();
 
-    std::println("[coro2]hello world, value: {}", static_cast<void *>(&value));
+    std::println("[coro2]hello world0, value: {}", static_cast<void *>(&value));
     std::tie(errc, value) = co_await coro1();
+    std::println("[coro2]hello world1, value: {}", static_cast<void *>(&value));
     co_return {std::error_code(), 2};
 }
 
-LocalTask<int> coro3()
+auto coro3() -> LocalTask<int>
 {
     auto errc  = std::error_code();
     auto value = int();
@@ -38,18 +39,19 @@ LocalTask<int> coro3()
     co_return {std::error_code(), 3};
 }
 
-int main()
+auto main() -> int
 {
-    auto sched = gp::coro::SingleThreadQueueScheduler();
+    auto sched = gp::coro::CoScheduler();
     // auto handle1 = coro1();
     // auto handle3 = coro3();
     // std::println("handle2 addr: {}", handle2.handle().address());
-    auto handle2 = sched.push(coro2());
+    auto handle2 = sched.pushBack(coro2());
     // sched.push(std::move(handle2));
     // sched.push(std::move(handle3));
 
     // sched.debugPrint();
 
-    handle2.resume();
+    handle2->resume();
+    handle2->resume();
     return 0;
 }

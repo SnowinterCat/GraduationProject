@@ -2,11 +2,14 @@
 #include <gp/__coroutine/__config.hpp>
 // Standard Library
 #include <type_traits>
-#include <print>
+#include <optional>
+// #include <list>
+// #include <print>
 // System Library
 // Third-Party Library
 // Local Library
 #include <gp/__coroutine/promise.hpp>
+#include <gp/__coroutine/scheduler.hpp>
 
 GP_BEGIN
 GP_CORO_BEGIN
@@ -24,19 +27,23 @@ public:
     using PromiseType   = LocalTaskPromise<T>;
     using StdHandleType = std::coroutine_handle<PromiseType>;
 
-    auto return_value(T value) noexcept(std::is_nothrow_move_constructible_v<T>) // NOLINT
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    void return_value(T value) noexcept(std::is_nothrow_move_constructible_v<T>)
     {
-        _value = std::move(value);
+        _value.emplace(std::move(value));
     }
     template <typename U>
-    auto return_value(U &&value) noexcept(std::is_nothrow_constructible_v<T, U>) // NOLINT
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    void return_value(U &&value) noexcept(std::is_nothrow_constructible_v<T, U>)
     {
-        _value = std::forward<U>(value);
+        _value.emplace(std::forward<U>(value));
     }
 
-    // auto return_void() noexcept {} // NOLINT
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    // auto return_void() noexcept {}
 
-    auto get_return_object() noexcept -> LocalTaskHandle<T> // NOLINT
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    auto get_return_object() noexcept -> LocalTaskHandle<T>
     {
         return static_cast<LocalTaskHandle<T>>(
             static_cast<StdHandleType>(StdHandleType::from_promise(*this)));
@@ -45,8 +52,10 @@ public:
     auto value() -> T & { return _value; }
     auto value() const -> T const & { return _value; }
 
+    [[nodiscard]] auto getValue() -> T && { return std::move(*_value); }
+
 protected:
-    T _value;
+    std::optional<T> _value;
 };
 
 template <typename T>
@@ -62,11 +71,11 @@ public:
     LocalTaskHandle(const LocalTaskHandle &) noexcept = default;
     LocalTaskHandle(LocalTaskHandle &&) noexcept      = default;
 
-    LocalTaskHandle(std::nullptr_t) noexcept {}
-    LocalTaskHandle(StdHandleType handle) noexcept : coro::CoHandle(handle) {}
+    explicit LocalTaskHandle(std::nullptr_t) noexcept {}
+    explicit LocalTaskHandle(StdHandleType handle) noexcept : coro::CoHandle(handle) {}
 
-    LocalTaskHandle &operator=(const LocalTaskHandle &rhs) noexcept = default;
-    LocalTaskHandle &operator=(LocalTaskHandle &&rhs) noexcept      = default;
+    auto operator=(const LocalTaskHandle &rhs) noexcept -> LocalTaskHandle & = default;
+    auto operator=(LocalTaskHandle &&rhs) noexcept -> LocalTaskHandle &      = default;
 
     // auto handle() -> StdHandleType & { return _stdHandle; }
     // auto handle() const -> const StdHandleType & { return _stdHandle; }
@@ -88,41 +97,38 @@ public:
     template <typename U>
     using PromiseType = coro::LocalTaskPromise<U>;
     template <typename U>
-    using StdHandleType = std::coroutine_handle<PromiseType<U>>;
-    template <typename U>
     using CoHandleType = coro::LocalTaskHandle<U>;
-
-    LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(&handle) {}
-
-    constexpr bool await_ready() const noexcept // NOLINT
-    {
-        return false;
-    }
     template <typename U>
-    constexpr void await_suspend(StdHandleType<U> caller) noexcept // NOLINT
+    using StdHandleType = std::coroutine_handle<PromiseType<U>>;
+
+    explicit LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(&handle) {}
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    [[nodiscard]] constexpr auto await_ready() const noexcept -> bool { return false; }
+
+    template <typename U>
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    constexpr void await_suspend(StdHandleType<U> caller) noexcept
     {
         // _caller = CoHandleType<U>(caller);
-        auto sch = caller.promise().scheduler(); //->push(_handle);
-        auto it  = sch.push(*_handle);
+        auto &sch = caller.promise().scheduler();
+        _iterator = sch.pushBack(std::move(*_handle));
         // caller 进入 awaitQueue，等待的函数数量增加一
         // sch.push();
         // handle 进入 readyQueue
         // sch.
-
-        std::println("caller: {}", caller.address());
-        std::println("this: {}, handle: {}", static_cast<void *>(_handle),
-                     _handle->handle().address());
     }
-    constexpr auto await_resume() const noexcept -> T && // NOLINT
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    [[nodiscard]] constexpr auto await_resume() const noexcept -> T &&
     {
-        std::println("{}", typeid(T).name());
-        // return T{};
-        return std::move(_handle->promise().value());
+        return std::move(_handle->promise().getValue());
     }
 
 protected:
-    coro::LocalTaskHandle<T> *_handle;
-    coro::CoHandle           *_caller;
+    CoHandleType<T>            *_handle;   // 当前协程函数
+    coro::CoScheduler::Iterator _iterator; // 当前协程函数调度器中的迭代器
+    coro::CoHandle             *_caller{}; // call 当前协程函数的协程函数
 };
 
 GP_CORO_END
