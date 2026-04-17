@@ -5,7 +5,7 @@
 
 // GP_CORO_API
 #if defined(_WIN32) && defined(GP_SHARED_BUILD)
-    #if defined(GP_CORO_COMPILING)
+    #if defined(GP_COROUTINE_COMPILING)
         #define GP_CORO_API __declspec(dllexport)
     #else
         #define GP_CORO_API __declspec(dllimport)

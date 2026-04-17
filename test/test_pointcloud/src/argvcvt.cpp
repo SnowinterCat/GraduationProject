@@ -35,6 +35,7 @@ auto argvloc2utf8([[maybe_unused]] int argc, [[maybe_unused]] const char *const 
         }
     }
     return std::tuple{argvec.data(), std::move(argvec), std::move(temp)};
-#endif
+#else
     return std::tuple{argv, std::move(argvec), std::move(temp)};
+#endif
 }

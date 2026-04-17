@@ -15,13 +15,13 @@ auto coro1() -> LocalTask<float>
     std::println("[coro1]hello world1");
     co_await std::suspend_always();
     std::println("[coro1]hello world2");
-    co_return {std::error_code(), 1};
+    co_return {std::error_code(), 1.0F};
 }
 
 auto coro2() -> LocalTask<int>
 {
     auto errc  = std::error_code();
-    auto value = int();
+    auto value = float();
 
     std::println("[coro2]hello world0, value: {}", static_cast<void *>(&value));
     std::tie(errc, value) = co_await coro1();
@@ -32,7 +32,7 @@ auto coro2() -> LocalTask<int>
 auto coro3() -> LocalTask<int>
 {
     auto errc  = std::error_code();
-    auto value = int();
+    auto value = float();
 
     std::println("[coro3]hello world");
     std::tie(errc, value) = co_await coro1();

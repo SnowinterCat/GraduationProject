@@ -51,7 +51,7 @@ concept KDTreeNodeAble = HasDistanceType<T> && HasDimensionValue<T> &&
                          CanExplicitConvertToPointType<T> && HasDistanceFunction<T>;
 
 template <KDTreeNodeAble T>
-class GP_ALGORITHM_API KDTree {
+class KDTree {
 public:
     using ValueType    = T;
     using DistanceType = T::DistanceType;
@@ -152,7 +152,7 @@ protected:
 template <KDTreeNodeAble T>
 void KDTree<T>::setElement(std::span<T> arr)
 {
-    const IndexType num = arr.size();
+    const IndexType num = static_cast<IndexType>(arr.size());
     _pointNodes.resize(num);
     for (IndexType i = 0; i < IndexType(num); ++i) {
         _pointNodes[i] = {arr[i], i};

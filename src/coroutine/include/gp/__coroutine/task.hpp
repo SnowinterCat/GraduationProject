@@ -15,14 +15,14 @@ GP_BEGIN
 GP_CORO_BEGIN
 
 template <typename>
-class GP_CORO_API LocalTaskPromise;
+class LocalTaskPromise;
 template <typename>
-class GP_CORO_API LocalTaskHandle;
+class LocalTaskHandle;
 template <typename>
-class GP_CORO_API LocalTaskAwaiter;
+class LocalTaskAwaiter;
 
 template <typename T>
-class GP_CORO_API LocalTaskPromise : public coro::CoPromise {
+class LocalTaskPromise : public coro::CoPromise {
 public:
     using PromiseType   = LocalTaskPromise<T>;
     using StdHandleType = std::coroutine_handle<PromiseType>;
@@ -59,7 +59,7 @@ protected:
 };
 
 template <typename T>
-class GP_CORO_API LocalTaskHandle : public coro::CoHandle {
+class LocalTaskHandle : public coro::CoHandle {
 public:
     using PromiseType   = coro::LocalTaskPromise<T>;
     using StdHandleType = std::coroutine_handle<PromiseType>;

@@ -220,7 +220,7 @@ auto DirectedGraph<CostType, DefaultFlowType>::dijkstra(int32_t source, int32_t 
     visit[source]    = true;
     distance[source] = static_cast<CostType>(0);
 
-    queue.push(HeapNode{0, source});
+    queue.push(HeapNode{static_cast<CostType>(0), source});
     while (!queue.empty()) {
         auto [cost, vertex] = queue.top();
         queue.pop();

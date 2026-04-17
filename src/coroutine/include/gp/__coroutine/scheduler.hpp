@@ -8,6 +8,12 @@
 // Local Library
 #include <gp/__coroutine/promise.hpp>
 
+#if defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable : 4275)
+    #pragma warning(disable : 4251)
+#endif
+
 GP_BEGIN
 GP_CORO_BEGIN
 
@@ -54,3 +60,7 @@ protected:
 
 GP_CORO_END
 GP_END
+
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
