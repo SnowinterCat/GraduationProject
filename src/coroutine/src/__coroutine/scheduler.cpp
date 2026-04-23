@@ -1,3 +1,4 @@
+#include "gp/__coroutine/promise.hpp"
 #include <gp/__coroutine/scheduler.hpp>
 // Standard Library
 // System Library
@@ -7,13 +8,23 @@
 GP_BEGIN
 GP_CORO_BEGIN
 
-CoScheduler::CoScheduler() = default;
+CoScheduler::CoScheduler()
+{
+    _readyQueue._coPromise        = new coro::CoPromise();
+    _awaitQueue._coPromise        = new coro::CoPromise();
+    _completeQueue._coPromise     = new coro::CoPromise();
+    _readyQueue.promise().next    = _readyQueue;
+    _readyQueue.promise().pre     = _readyQueue;
+    _awaitQueue.promise().next    = _awaitQueue;
+    _awaitQueue.promise().pre     = _awaitQueue;
+    _completeQueue.promise().next = _completeQueue;
+    _completeQueue.promise().pre  = _completeQueue;
+}
 CoScheduler::~CoScheduler()
 {
-    for (const auto &handle : _readyQueue) {
-        handle.handle().destroy();
-    }
-    _readyQueue.clear();
+    delete _completeQueue._coPromise;
+    delete _awaitQueue._coPromise;
+    delete _readyQueue._coPromise;
 }
 
 CoScheduler::CoScheduler(CoScheduler &&rhs) noexcept
@@ -26,17 +37,39 @@ auto CoScheduler::operator=(CoScheduler &&rhs) noexcept -> CoScheduler &
     return *this;
 }
 
-// void CoScheduler::push(coro::CoHandle &&handle)
-// {
-//     // handle.promise().scheduler() = this;
-//     // // 加入 memQueue 管理生命周期
-//     // _readyQueueHead if (_memQueue != nullptr) [[unlikely]]
-//     // {
-//     //     handle.promise()._memNext = std::move(_memQueue->promise()._memNext);
-//     // }
-//     // _memQueue = std::make_unique<coro::CoHandle>(std::move(handle));
-//     // // 加入 readyQueue 准备调度
-// }
+void CoScheduler::ready(coro::CoHandle handle)
+{
+    _moveTo(_readyQueue, handle);
+}
+void CoScheduler::await(coro::CoHandle handle)
+{
+    _moveTo(_awaitQueue, handle);
+}
+void CoScheduler::complete(coro::CoHandle handle)
+{
+    _moveTo(_completeQueue, handle);
+}
+
+void CoScheduler::_moveTo(coro::CoHandle &queue, coro::CoHandle &handle)
+{
+    auto &pre          = handle.promise().pre;
+    auto &next         = handle.promise().next;
+    pre.promise().next = next;
+    next.promise().pre = pre;
+
+    handle.promise().next              = queue;
+    handle.promise().pre               = queue.promise().pre;
+    queue.promise().pre.promise().next = handle;
+    queue.promise().pre                = handle;
+}
+
+void CoScheduler::resume()
+{
+    auto &handle = _readyQueue.promise().next;
+
+    handle.promise().coroState = coro::CoState::eExecute;
+    handle.handle().resume();
+}
 
 void SingleThreadQueueScheduler::debugPrint()
 {

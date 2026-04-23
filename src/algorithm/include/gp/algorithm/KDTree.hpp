@@ -152,7 +152,7 @@ protected:
 template <KDTreeNodeAble T>
 void KDTree<T>::setElement(std::span<T> arr)
 {
-    const IndexType num = static_cast<IndexType>(arr.size());
+    const auto num = static_cast<IndexType>(arr.size());
     _pointNodes.resize(num);
     for (IndexType i = 0; i < IndexType(num); ++i) {
         _pointNodes[i] = {arr[i], i};

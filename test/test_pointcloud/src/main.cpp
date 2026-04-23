@@ -9,7 +9,7 @@
 // Local Library
 #include "argvcvt.hpp"
 
-int main(int argc, const char *const *argvloc)
+auto main(int argc, const char *const *argvloc) -> int
 {
     // 全平台字符编码强制修改为 UTF-8
     auto [argu8, argvec, argstr] = argvloc2utf8(argc, argvloc);

@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>
 #include <gp/__algorithm/__config.hpp>
 // Standard Library
 #include <new>

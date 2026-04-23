@@ -101,7 +101,7 @@ public:
     template <typename U>
     using StdHandleType = std::coroutine_handle<PromiseType<U>>;
 
-    explicit LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(&handle) {}
+    explicit LocalTaskAwaiter(CoHandleType<T> &handle) : _handle(handle) {}
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     [[nodiscard]] constexpr auto await_ready() const noexcept -> bool { return false; }
@@ -110,25 +110,27 @@ public:
     // NOLINTNEXTLINE(readability-identifier-naming)
     constexpr void await_suspend(StdHandleType<U> caller) noexcept
     {
-        // _caller = CoHandleType<U>(caller);
         auto &sch = caller.promise().scheduler();
-        _iterator = sch.pushBack(std::move(*_handle));
-        // caller 进入 awaitQueue，等待的函数数量增加一
-        // sch.push();
-        // handle 进入 readyQueue
-        // sch.
+
+        _caller                     = static_cast<coro::CoHandle>(caller);
+        _caller.promise().coroState = coro::CoState::eAwait;
+        _caller.promise().awaitCnt  = 1;
+        _caller.promise().child     = _handle;
+        _handle.promise().parent    = _caller;
+        _handle.promise().sibling   = nullptr;
+        sch.await(_caller);
+        _handle = sch.push(_handle);
     }
 
     // NOLINTNEXTLINE(readability-identifier-naming)
-    [[nodiscard]] constexpr auto await_resume() const noexcept -> T &&
+    [[nodiscard]] constexpr auto await_resume() noexcept -> T &&
     {
-        return std::move(_handle->promise().getValue());
+        return std::move(_handle.promise().getValue());
     }
 
 protected:
-    CoHandleType<T>            *_handle;   // 当前协程函数
-    coro::CoScheduler::Iterator _iterator; // 当前协程函数调度器中的迭代器
-    coro::CoHandle             *_caller{}; // call 当前协程函数的协程函数
+    CoHandleType<T> _handle; // 当前协程函数
+    coro::CoHandle  _caller; // call 当前协程函数的协程函数
 };
 
 GP_CORO_END

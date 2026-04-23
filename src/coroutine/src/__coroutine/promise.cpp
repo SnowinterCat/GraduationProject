@@ -20,6 +20,11 @@ CoHandle::CoHandle(CoHandle &&rhs) noexcept
 }
 
 CoHandle::CoHandle(std::nullptr_t) noexcept : _stdHandle(nullptr), _coPromise(nullptr) {}
+auto CoHandle::operator=(const std::nullptr_t &rhs) noexcept -> CoHandle &
+{
+    _stdHandle = rhs;
+    return *this;
+}
 
 auto CoHandle::operator=(const CoHandle &rhs) noexcept -> CoHandle & = default;
 auto CoHandle::operator=(CoHandle &&rhs) noexcept -> CoHandle &
@@ -27,6 +32,19 @@ auto CoHandle::operator=(CoHandle &&rhs) noexcept -> CoHandle &
     this->_stdHandle = std::exchange(rhs._stdHandle, {});
     this->_coPromise = std::exchange(rhs._coPromise, {});
     return *this;
+}
+
+auto CoHandle::operator<=>(const coro::CoHandle &rhs) const -> std::strong_ordering
+{
+    return _stdHandle <=> rhs._stdHandle;
+}
+auto CoHandle::operator==(const coro::CoHandle &rhs) const -> bool
+{
+    return _stdHandle == rhs._stdHandle;
+}
+auto CoHandle::operator==(const std::nullptr_t &rhs) const -> bool
+{
+    return _stdHandle == rhs;
 }
 
 auto CoHandle::handle() -> std::coroutine_handle<> &

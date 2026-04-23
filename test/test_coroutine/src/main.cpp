@@ -45,13 +45,15 @@ auto main() -> int
     // auto handle1 = coro1();
     // auto handle3 = coro3();
     // std::println("handle2 addr: {}", handle2.handle().address());
-    auto handle2 = sched.pushBack(coro2());
+    auto co2 = sched.push(coro2());
     // sched.push(std::move(handle2));
     // sched.push(std::move(handle3));
 
     // sched.debugPrint();
 
-    handle2->resume();
-    handle2->resume();
+    sched.resume();
+    sched.resume();
+    sched.resume();
+    std::println("{}", co2.promise().child.handle().done());
     return 0;
 }

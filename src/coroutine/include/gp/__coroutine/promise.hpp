@@ -1,6 +1,8 @@
 #pragma once
 #include <gp/__coroutine/__config.hpp>
 // Standard Library
+#include <cstddef>
+#include <cstdint>
 #include <coroutine>
 #include <exception>
 // System Library
@@ -20,6 +22,17 @@ class GP_CORO_API CoPromise;
 class GP_CORO_API CoHandle;
 class GP_CORO_API CoScheduler;
 
+enum class CoState : uint8_t
+{
+    eCreated  = 0x00,
+    eReady    = 0x01,
+    eExecute  = 0x02,
+    eAwait    = 0x03,
+    eComplete = 0x04,
+    eCancel   = 0x05,
+    eDestory  = 0x06,
+};
+
 class GP_CORO_API CoHandle {
     friend class coro::CoScheduler;
 
@@ -33,6 +46,7 @@ public:
     CoHandle(CoHandle &&) noexcept;
 
     explicit CoHandle(std::nullptr_t) noexcept;
+    auto operator=(const std::nullptr_t &rhs) noexcept -> CoHandle &;
 
     template <typename T>
         requires(std::is_base_of_v<coro::CoPromise, T>)
@@ -44,13 +58,15 @@ public:
     auto operator=(const CoHandle &rhs) noexcept -> CoHandle &;
     auto operator=(CoHandle &&rhs) noexcept -> CoHandle &;
 
+    auto operator<=>(const coro::CoHandle &rhs) const -> std::strong_ordering;
+    auto operator==(const coro::CoHandle &rhs) const -> bool;
+    auto operator==(const std::nullptr_t &rhs) const -> bool;
+
     [[nodiscard]] auto handle() -> StdHandleType &;
     [[nodiscard]] auto handle() const -> StdHandleType const &;
 
     [[nodiscard]] auto promise() -> PromiseType &;
     [[nodiscard]] auto promise() const -> PromiseType const &;
-
-    void resume() { _stdHandle.resume(); }
 
 protected:
     StdHandleType    _stdHandle;
@@ -85,6 +101,16 @@ public:
 protected:
     std::exception_ptr _exception;
     coro::CoScheduler *_scheduler;
+
+public:
+    uint8_t        coroLock{};
+    coro::CoState  coroState{};
+    uint32_t       awaitCnt{};
+    coro::CoHandle parent{};
+    coro::CoHandle child{};
+    coro::CoHandle sibling{};
+    coro::CoHandle next{};
+    coro::CoHandle pre{};
 };
 
 GP_CORO_END
