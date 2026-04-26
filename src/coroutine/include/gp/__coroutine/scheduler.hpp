@@ -1,7 +1,6 @@
 #pragma once
 #include <gp/__coroutine/__config.hpp>
 // Standard Library
-#include <memory>
 // System Library
 // Third-Party Library
 // Local Library
@@ -31,40 +30,29 @@ public:
 
     template <typename T>
         requires(std::is_base_of_v<coro::CoHandle, T>)
-    auto push(T handle) -> T
+    auto push(T &&handle) -> T::PromiseType *
     {
-        handle.promise().scheduler(this);
-        handle.promise().next = handle;
-        handle.promise().pre  = handle;
-        _moveTo(_readyQueue, handle);
-        return handle;
+        auto *promise      = handle.promise();
+        promise->handle    = std::forward<T &&>(handle).handle();
+        promise->scheduler = this;
+        promise->moveBefore(&_readyQueue);
+        return promise;
     }
 
-    void ready(coro::CoHandle handle);
-    void await(coro::CoHandle handle);
-    void complete(coro::CoHandle handle);
+    void ready(coro::CoPromise *promise);
+    void await(coro::CoPromise *promise, uint32_t awaitCnt);
+    void complete(coro::CoPromise *promise);
+    void cancel(coro::CoPromise *promise);
+    void destory(coro::CoPromise *promise);
 
     void resume();
 
 protected:
-    static void _moveTo(coro::CoHandle &queue, coro::CoHandle &handle);
-
-protected:
-    coro::CoHandle _readyQueue;
-    coro::CoHandle _awaitQueue;
-    coro::CoHandle _completeQueue;
-};
-
-class GP_CORO_API SingleThreadQueueScheduler : public CoScheduler {
-public:
-    void debugPrint();
-
-protected:
-    void _readyQueuPush(std::unique_ptr<coro::CoHandle> &&handle);
-    void _awaitQueuePush();
-    void _completeQueuePush();
-
-protected:
+    coro::CoPromise _readyQueue;
+    coro::CoPromise _awaitQueue;
+    coro::CoPromise _completeQueue;
+    coro::CoPromise _cancelQueue;
+    coro::CoPromise _destoryQueue;
 };
 
 GP_CORO_END
