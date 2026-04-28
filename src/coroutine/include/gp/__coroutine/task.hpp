@@ -134,8 +134,8 @@ public:
         auto *sch           = caller.promise().scheduler;
         auto *callerPromise = &caller.promise();
         _promise            = sch->push(std::move(_handle));
-        // caller: Execute -> await
-        // handle: Create -> ready
+        // caller: execute -> await 1 sub-coroutine
+        // handle: create -> ready
         sch->await(callerPromise, 1);
         sch->ready(_promise);
         // calling tree

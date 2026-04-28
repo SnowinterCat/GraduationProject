@@ -1,7 +1,6 @@
 #include "gp/__coroutine/promise.hpp"
 #include <gp/__coroutine/scheduler.hpp>
 // Standard Library
-#include <print>
 // System Library
 // Third-Party Library
 // Local Library

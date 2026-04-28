@@ -1,6 +1,7 @@
 #pragma once
 #include <gp/__coroutine/__config.hpp>
 // Standard Library
+#include <type_traits>
 // System Library
 // Third-Party Library
 // Local Library
@@ -15,8 +16,6 @@
 GP_BEGIN
 GP_CORO_BEGIN
 
-// Todo:
-//  1. 用侵入式指针替代 std::list
 class GP_CORO_API CoScheduler {
 public:
     CoScheduler();
@@ -32,10 +31,13 @@ public:
         requires(std::is_base_of_v<coro::CoHandle, T>)
     auto push(T &&handle) -> T::PromiseType *
     {
-        auto *promise      = handle.promise();
-        promise->handle    = std::forward<T &&>(handle).handle();
+        // 移动所有权并销毁包装句柄
+        std::remove_reference_t<T> temp = std::forward<T &&>(handle);
+        // 用 Promise 维护
+        auto *promise      = temp.promise();
+        promise->handle    = temp.handle();
         promise->scheduler = this;
-        promise->moveBefore(&_readyQueue);
+        ready(promise);
         return promise;
     }
 
